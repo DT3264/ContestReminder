@@ -50,7 +50,7 @@ class _ContestsList extends State<ContestsList> {
 		setState(() {
 			isLoadingData=true; 
 		});
-		loadLocalContests();
+		await loadLocalContests();
 		initFirebase();
     bool isFirstStart = await _sharedPreferencesHelper.isFirstStart();
     if(isFirstStart){
@@ -146,12 +146,11 @@ class _ContestsList extends State<ContestsList> {
     List<Contest> tmpContestList = [];
     try{
       tmpContestList = await _contestsFetcher.fetchContests();
+      _contestList = tmpContestList;
     } on SocketException{
 			showSnackBar("There's no internet connection. Try again later.");
-      return;
     }
     setState(() {
-      _contestList = tmpContestList;
       isLoadingData = false;
     });
   }

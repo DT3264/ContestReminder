@@ -29,9 +29,9 @@ dependencies:
   auto_size_text: ^2.0.2+1
   shared_preferences: ^0.5.3+4
   
-  firebase_core: ^0.4.0
-  firebase_messaging: ^5.0.2
-  firebase_analytics: ^1.0.4
+  firebase_core: ^0.4.0+8
+  firebase_messaging: ^5.1.2
+  firebase_analytics: ^4.0.2
 
 
 dev_dependencies:
