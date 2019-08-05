@@ -8,6 +8,7 @@
 .buildlog/
 .history
 .svn/
+to-do.txt
 
 # IntelliJ related
 *.iml
@@ -28,6 +29,9 @@
 .pub-cache/
 .pub/
 /build/
+
+# Firecloud key
+**/android/app/google-services.json
 
 # Android related
 **/android/**/gradle-wrapper.jar
