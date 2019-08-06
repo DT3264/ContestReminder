@@ -17,7 +17,7 @@ class ContestsFetcher{
 		}
 	}
 
-	Future<List<Contest>> fetchContests() async{
+	Future<void> fetchContests() async{
 	  LocalContestsHelper localContestsHelper = LocalContestsHelper();
     http.Response response;
     try{
@@ -44,14 +44,9 @@ class ContestsFetcher{
   Future<List<Contest>> _contestsResponseToList(dynamic _contestResponse) async{
 		List<Contest> contestList = List<Contest>();
     List<String> contestsIgnored = await SharedPreferencesHelper().getUnsubscribedContests();
-    for(var i=0; i<contestsIgnored.length; i++){
-      print(contestsIgnored[i]);
-    }
 		Contest actualContest;
 		for(var contestData in _contestResponse){
-			//print("Parsing: ");
-			//print(contestData);
-			actualContest = Contest.fromArray(contestData);
+			actualContest = Contest.fromFetch(contestData);
       if(!contestsIgnored.contains(actualContest.contestPlatform)){
 			  contestList.add(actualContest);
       }
