@@ -4,6 +4,6 @@ class Strings{
   
   //Strings on firecloud topics
   static String codeforcesTopic = "Codeforces";
-  static String atcoderTopic = "ATCoder";
+  static String atcoderTopic = "AtCoder";
   static String debugTopic = "Debug";
 }

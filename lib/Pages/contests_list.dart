@@ -1,16 +1,19 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:contests_reminder/contests_fetcher.dart';
-import 'package:contests_reminder/Helpers/shared_preferences_helper.dart';
-import 'package:flutter/material.dart';
+import 'package:prefs/prefs.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 //Local imports
-import 'package:contests_reminder/strings.dart';
+import 'package:contests_reminder/Pages/about.dart';
+import 'package:contests_reminder/Utils/strings.dart';
+import 'package:contests_reminder/Pages/settings.dart';
 import 'package:contests_reminder/Models/contest.dart';
+import 'package:contests_reminder/Utils/scaledText.dart';
+import 'package:contests_reminder/Pages/hidden_contests.dart';
+import 'package:contests_reminder/Utils/contests_fetcher.dart';
 import 'package:contests_reminder/Helpers/localContestsHelper.dart';
 
 class ContestsList extends StatefulWidget{
@@ -23,73 +26,129 @@ class _ContestsList extends State<ContestsList> {
 	List<Contest> _contestList=[];
 	bool isLoadingData=false;
 
-  SharedPreferencesHelper _sharedPreferencesHelper = SharedPreferencesHelper();
   final ContestsFetcher _contestsFetcher = ContestsFetcher();
 	final LocalContestsHelper _localContestsHelper = LocalContestsHelper();
 	final FirebaseMessaging _fireCloudMessaging = FirebaseMessaging();
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  //SharedPreferencesHelper _sharedPreferencesHelper;
+  FlutterLocalNotificationsPlugin _localNotifications;
 	
   @override
 	void initState() {
 		super.initState();
-		init();   
+    Prefs.init();
+		init();
 	}
+
+  void init() async {
+		initFirebase();
+    refreshContests();
+    if(await Prefs.getBoolF("isFirstStart", true)){
+      Prefs.setBool("isFirstStart", false);
+      Prefs.setBool(Strings.atcoderTopic, true);
+      Prefs.setBool(Strings.codeforcesTopic, true);
+      _fireCloudMessaging.subscribeToTopic(Strings.atcoderTopic);
+      _fireCloudMessaging.subscribeToTopic(Strings.codeforcesTopic);
+      showDialog(
+        context: context,
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: Text("First time here, huh?"),
+            content: Text("Click on any contest to see some options or refresh the available contests by pulling down the list."),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("OK"),
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        }
+      );
+    }
+    _localNotifications = new FlutterLocalNotificationsPlugin();
+    //Initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    //Self note: AndroidSettings icon is from the drawable folder :d 
+    var initializationSettingsAndroid = new AndroidInitializationSettings('ic_launcher');
+    var initializationSettingsIOS = new IOSInitializationSettings(onDidReceiveLocalNotification: (id, title, body, payload) async{});
+    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+    _localNotifications.initialize(initializationSettings);
+	}
+
 	@override
 	Widget build(BuildContext context) {
 		return Scaffold(
 		key: _scaffoldKey,
 		appBar: AppBar(
 			title: Text("Contest Reminder"),
+      actions: [getAppBarActions()]
 		),
 		body: Builder (
 			builder: (context)=> getBody(context)
 		)
 		);
 	}
-	
-	void init() async {
-		initFirebase();
-    bool isFirstStart = await _sharedPreferencesHelper.isFirstStart();
-    if(isFirstStart){
-      _sharedPreferencesHelper.subscribeToAll();
-      await subscribeToAllOnFirecloud();
-    }
-    await _refreshContests();
-    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
-    //Initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    //Self note: AndroidSettings icon is from the drawable folder :d 
-    var initializationSettingsAndroid = new AndroidInitializationSettings('ic_launcher');
-    var initializationSettingsIOS = new IOSInitializationSettings(onDidReceiveLocalNotification: (id, title, body, payload) async{});
-    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
-	}
+
+  Widget getAppBarActions(){
+    return PopupMenuButton(
+      itemBuilder: (BuildContext context){
+        return [
+          PopupMenuItem(value: 1, child: Text("Refresh contests")),
+          PopupMenuItem(value: 2, child: Text("Hidden contests")),
+          PopupMenuItem(value: 3, child: Text("Settings")),
+          PopupMenuItem(value: 4, child: Text("About")),
+        ];
+      },
+      onSelected: (int index) async{
+        if(index==1){
+          refreshContests();
+        }
+        else if(index==2){
+          await Navigator.push(
+            context, 
+            MaterialPageRoute(
+              builder: (context) => HiddenContests()
+            )
+          );
+          refreshContests();
+        }
+        else if(index==3){
+          await Navigator.push(
+            context, 
+            MaterialPageRoute(
+              builder: (context) => Settings()
+            )
+          );
+          refreshContests();
+        }
+        else if(index==4){
+          Navigator.push(
+            context, 
+            MaterialPageRoute(
+              builder: (context) => About()
+            )
+          );
+        }
+      },
+    );
+  }
 
 	void initFirebase() {
 		_fireCloudMessaging.configure(
 			onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
-        await _refreshContests();
+        refreshContests();
       },
       onLaunch: (Map<String, dynamic> message) async {
         print("onLaunch: $message");
-        await _refreshContests();
+        refreshContests();
       },
       onResume: (Map<String, dynamic> message) async {
         print("onResume: $message");
-        await _refreshContests();
+        refreshContests();
       },
 		);
 	}
-
-  Future<void> subscribeToAllOnFirecloud() async{
-    await _fireCloudMessaging.subscribeToTopic(Strings.atcoderTopic);
-    await _fireCloudMessaging.subscribeToTopic(Strings.codeforcesTopic);
-    //Debug only, remove on production
-    assert((){
-      _fireCloudMessaging.subscribeToTopic(Strings.debugTopic); 
-      return true;
-    }());
-  }
 
 	Future loadLocalContests() async{
     if(!isLoadingData){
@@ -111,7 +170,7 @@ class _ContestsList extends State<ContestsList> {
 				children: <Widget>[
 					Padding(
 						padding: EdgeInsets.only(bottom: 10),
-						child: scaledText("Fetching contests data")
+						child: scaledText("Fetching contests data", 18)
 					),
 					CircularProgressIndicator()
 				],
@@ -132,20 +191,20 @@ class _ContestsList extends State<ContestsList> {
 			mainAxisAlignment: MainAxisAlignment.center,
 			children: <Widget>[
 					Container(
-						child: scaledText("Next contests: ${_contestList.length}"),
+						child: scaledText("Next contests: ${_contestList.length}", 18),
 						margin: EdgeInsets.only(top: 10),
 					),
 					Expanded(
 						child: new RefreshIndicator(
 							child: getContestList(),
-							onRefresh: _refreshContests,
+							onRefresh: refreshContests,
 						)
 					),
 				],
 			);
 	}
 
-  Future<void> _refreshContests() async{
+  Future<void> refreshContests() async{
     setState(() {
       isLoadingData = true;
     });
@@ -153,6 +212,9 @@ class _ContestsList extends State<ContestsList> {
       await _contestsFetcher.fetchContests();
     } on SocketException{
 			showSnackBar("There's no internet connection. Try again later.");
+    }
+    on Exception catch(e){
+      print(e);
     }
     _contestList = await _localContestsHelper.getContests();
     setState(() { 
@@ -164,12 +226,12 @@ class _ContestsList extends State<ContestsList> {
 		return ListView.builder(
 			physics: const AlwaysScrollableScrollPhysics(),
 			shrinkWrap: true,
-			itemBuilder: (BuildContext context, int index) => _contestBuilder(context, index),
+			itemBuilder: (BuildContext context, int index) => contestBuilder(context, index),
 			itemCount: _contestList.length,
 		);
 	}
 
-	Widget _contestBuilder(BuildContext context, int index){
+	Widget contestBuilder(BuildContext context, int index){
 		Contest contest = _contestList[index];
 		return PopupMenuButton(
 			child: contestCard(contest, index),
@@ -182,14 +244,16 @@ class _ContestsList extends State<ContestsList> {
 				}
 				if(value==2){
 					//Hide contest
-					await _localContestsHelper.hideContest(contest);
+					await _localContestsHelper.switchContestHide(contest);
 					await loadLocalContests();
 				}
 				if(value==3){
 					//Remind me!
 					await _localContestsHelper.switchAlertToContest(contest);
+          String message = contest.hasAlert == 0 ? "The contest would be notified" : "The contest notification has been canceled";
+          showSnackBar(message);
           setState(() {
-            contest.hasAlert = contest.hasAlert == 0 ? 1 : 0; 
+            contest.hasAlert = contest.hasAlert == 0 ? 1 : 0;
           });
 				}
 			},
@@ -220,20 +284,18 @@ class _ContestsList extends State<ContestsList> {
 				),
 			),
       //If contest is hidden don't let it to be reminded
-      (_contestList[index].hidden == 0 ?
       PopupMenuDivider(
         height: 10,
-      ) : []),
-      (_contestList[index].hidden == 0 ?
-        PopupMenuItem(
-          value: 3,
-          child: Text(
-            _contestList[index].hasAlert == 0 ? "Remind me!" : "Disable alert",
-            style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.normal
-            ),
+      ),
+      PopupMenuItem(
+        value: 3,
+        child: Text(
+          _contestList[index].hasAlert == 0 ? "Remind me!" : "Disable alert",
+          style: TextStyle(
+            color: Colors.black, fontWeight: FontWeight.normal
           ),
-        ) : []),
+        ),
+      ),
 		];
 	}
 
@@ -243,13 +305,13 @@ class _ContestsList extends State<ContestsList> {
 				borderRadius: BorderRadius.circular(10)
 			),
 			margin: EdgeInsets.fromLTRB(10, 10, 10, 10),
-			color: _getContestColor(index),
+			color: getContestColor(index),
 			child: Padding(
 			padding: EdgeInsets.only(top: 5, bottom: 10),
 			child: Column(
 				children: <Widget>[
-					scaledText("${contest.contestPlatform} contest"),
-					scaledText(contest.contestName),
+					scaledText("${contest.contestPlatform} contest", 18),
+					scaledText(contest.contestName, 18),
 					Row(
 						children: <Widget>[
 						dateTimeContestDesc(
@@ -288,45 +350,21 @@ class _ContestsList extends State<ContestsList> {
 		);
 	}
 
-	Widget scaledText(String text){
-		return Padding(
-			padding: EdgeInsets.only(bottom: 5),
-			child: AutoSizeText(
-				text,
-				textAlign: TextAlign.center,
-				style: TextStyle(
-				fontSize: 18
-				)
-			)
-		);
-	}
-
-	Widget scaledTextDate(String text){
-		return AutoSizeText(
-			text,
-			softWrap: true,
-			style: TextStyle(
-				fontSize: 18,
-				height: 0.8
-			)
-		);
-	}
-
 	void showSnackBar(String text){
 		final snackBar = SnackBar(
 			//backgroundColor: Colors.black,
-			content: Text(text)
+			content: scaledText(text, 16)
 		);
 		// Find the Scaffold in the widget tree and use it to show a SnackBar.
 		_scaffoldKey.currentState.showSnackBar(snackBar);
 	}
 
-	Color _getContestColor(int index){
+	Color getContestColor(int index){
 		if(_contestList[index].contestPlatform==Strings.codeforcesTopic){
 			return Colors.yellow;
 		}
 		else if(_contestList[index].contestPlatform==Strings.atcoderTopic){
-			return Colors.black26;
+			return Colors.grey;
 		}
 		return Colors.black;
 	}

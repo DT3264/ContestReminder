@@ -1,40 +1,39 @@
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:contests_reminder/strings.dart';
-
+import 'package:prefs/prefs.dart';
+import 'package:contests_reminder/Utils/strings.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 class SharedPreferencesHelper{
-  Future<bool> isFirstStart() async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return !prefs.containsKey(Strings.isFirstStart);
-  }
+  final FirebaseMessaging _fireCloudMessaging = FirebaseMessaging();
 
-  Future<void> subscribeToAll() async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool(Strings.atcoderTopic, true);
-    prefs.setBool(Strings.codeforcesTopic, true);
-    prefs.setBool(Strings.isFirstStart, false);
+  bool isFirstStart(){
+    if(Prefs.getBool(Strings.isFirstStart, true)){
+      return false;
+    }
+    else{
+      Prefs.setBool(Strings.isFirstStart, false);
+      return true;
+    }
   }
-
+  void subscribeToAllContests(){
+    subscribeToTopic(Strings.atcoderTopic);
+    subscribeToTopic(Strings.codeforcesTopic);
+  }
   Future<void> unsubscribeToTopic(String topicToUnsubscribe) async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool(topicToUnsubscribe, false);
+    Prefs.setBool(topicToUnsubscribe, false);
+    await _fireCloudMessaging.unsubscribeFromTopic(topicToUnsubscribe);
   }
   Future<void> subscribeToTopic(String topicToSubscribe) async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool(topicToSubscribe, true);
+    Prefs.setBool(topicToSubscribe, true);
+    _fireCloudMessaging.subscribeToTopic(topicToSubscribe);
   }
-  Future<bool> isSubscibedToTopic(String topic) async{
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if(!prefs.containsKey(topic)){
-        prefs.setBool(topic, false);
-    }
-    return prefs.getBool(topic);
+  bool isSubscibedToTopic(String topic){
+    return Prefs.getBool(topic, false);
   }
-  Future<List<String>> getUnsubscribedContests() async{
+  List<String> getUnsubscribedContests(){
       List<String> unsubscribedTopics = List<String>();
-      if(!await isSubscibedToTopic(Strings.atcoderTopic)){
+      if(!isSubscibedToTopic(Strings.atcoderTopic)){
           unsubscribedTopics.add(Strings.atcoderTopic);
       }
-      if(!await isSubscibedToTopic(Strings.codeforcesTopic)){
+      if(!isSubscibedToTopic(Strings.codeforcesTopic)){
           unsubscribedTopics.add(Strings.codeforcesTopic);
       }
       return unsubscribedTopics;

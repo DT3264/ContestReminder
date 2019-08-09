@@ -1,7 +1,6 @@
-import 'package:contests_reminder/Helpers/shared_preferences_helper.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:contests_reminder/Models/contest.dart';
 import 'package:contests_reminder/Helpers/localContestsHelper.dart';
 class ContestsFetcher{
@@ -43,13 +42,10 @@ class ContestsFetcher{
 
   Future<List<Contest>> _contestsResponseToList(dynamic _contestResponse) async{
 		List<Contest> contestList = List<Contest>();
-    List<String> contestsIgnored = await SharedPreferencesHelper().getUnsubscribedContests();
-		Contest actualContest;
+    Contest actualContest;
 		for(var contestData in _contestResponse){
 			actualContest = Contest.fromFetch(contestData);
-      if(!contestsIgnored.contains(actualContest.contestPlatform)){
-			  contestList.add(actualContest);
-      }
+      contestList.add(actualContest);
 		}
 		return contestList;
 	}
