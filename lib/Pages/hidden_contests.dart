@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 //Local imports
 import 'package:contests_reminder/Utils/strings.dart';
 import 'package:contests_reminder/Models/contest.dart';
-import 'package:contests_reminder/Helpers/localContestsHelper.dart';
 import 'package:contests_reminder/Utils/scaledText.dart';
+import 'package:contests_reminder/Helpers/shared_preferences_helper.dart';
+import 'package:contests_reminder/Helpers/localContestsHelper.dart';
 
 class HiddenContests extends StatefulWidget{
   @override
@@ -19,6 +20,7 @@ class _HiddenContests extends State<HiddenContests>{
 	bool isLoadingData=false;
 
 	final LocalContestsHelper _localContestsHelper = LocalContestsHelper();
+  final SharedPreferencesHelper prefsHelper = SharedPreferencesHelper();
 
   @override
   Widget build(BuildContext context){
@@ -105,11 +107,20 @@ class _HiddenContests extends State<HiddenContests>{
 				if(value==3){
 					//Remind me!
 					await _localContestsHelper.switchAlertToContest(contest);
+          String message;
+          int timeDelay = prefsHelper.getInt(Strings.reminderTime, 60);
+          if(contest.hasAlert == 0){ 
+            message = "The contest would be notified ${timeDelay%60 > 0 ? timeDelay : 1} ${timeDelay%60 > 0 ? "minute" : "hour"}${timeDelay%60 > 1 ? "s" : ""} before the contest" ;
+          }
+          else{
+            message = "The contest notification has been canceled";
+          }
+          showSnackBar(message);
           setState(() {
-            contest.hasAlert = contest.hasAlert == 0 ? 1 : 0; 
+            contest.hasAlert = contest.hasAlert == 0 ? 1 : 0;
           });
 				}
-			},
+			}
 		);
 	}
 

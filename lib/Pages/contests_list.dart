@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:prefs/prefs.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:contests_reminder/Helpers/shared_preferences_helper.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 //Local imports
-import 'package:contests_reminder/Pages/about.dart';
 import 'package:contests_reminder/Utils/strings.dart';
 import 'package:contests_reminder/Pages/settings.dart';
 import 'package:contests_reminder/Models/contest.dart';
@@ -29,25 +28,25 @@ class _ContestsList extends State<ContestsList> {
   final ContestsFetcher _contestsFetcher = ContestsFetcher();
 	final LocalContestsHelper _localContestsHelper = LocalContestsHelper();
 	final FirebaseMessaging _fireCloudMessaging = FirebaseMessaging();
-  //SharedPreferencesHelper _sharedPreferencesHelper;
+  SharedPreferencesHelper prefsHelper = SharedPreferencesHelper();
   FlutterLocalNotificationsPlugin _localNotifications;
-	
+
   @override
 	void initState() {
 		super.initState();
-    Prefs.init();
 		init();
 	}
 
   void init() async {
 		initFirebase();
+    checkFirstInit();
     refreshContests();
-    if(await Prefs.getBoolF("isFirstStart", true)){
-      Prefs.setBool("isFirstStart", false);
-      Prefs.setBool(Strings.atcoderTopic, true);
-      Prefs.setBool(Strings.codeforcesTopic, true);
-      _fireCloudMessaging.subscribeToTopic(Strings.atcoderTopic);
-      _fireCloudMessaging.subscribeToTopic(Strings.codeforcesTopic);
+	}
+
+  void checkFirstInit() async{
+    await prefsHelper.init();
+    if(prefsHelper.isFirstStart()){
+      print("first init");
       showDialog(
         context: context,
         builder: (BuildContext context){
@@ -66,6 +65,9 @@ class _ContestsList extends State<ContestsList> {
         }
       );
     }
+  }
+
+  void initNotifications(){
     _localNotifications = new FlutterLocalNotificationsPlugin();
     //Initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
     //Self note: AndroidSettings icon is from the drawable folder :d 
@@ -73,7 +75,7 @@ class _ContestsList extends State<ContestsList> {
     var initializationSettingsIOS = new IOSInitializationSettings(onDidReceiveLocalNotification: (id, title, body, payload) async{});
     var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
     _localNotifications.initialize(initializationSettings);
-	}
+  }
 
 	@override
 	Widget build(BuildContext context) {
@@ -84,7 +86,7 @@ class _ContestsList extends State<ContestsList> {
       actions: [getAppBarActions()]
 		),
 		body: Builder (
-			builder: (context)=> getBody(context)
+			builder: (context) => getBody(context)
 		)
 		);
 	}
@@ -122,11 +124,22 @@ class _ContestsList extends State<ContestsList> {
           refreshContests();
         }
         else if(index==4){
-          Navigator.push(
-            context, 
-            MaterialPageRoute(
-              builder: (context) => About()
-            )
+          showAboutDialog(
+            applicationVersion: "1.0",
+            applicationName: "Contests Reminder",
+            children: [
+              scaledText("With <3 by DT3264", 18),
+              scaledText("Bugs or suggestions?, follow the link to the project.", 18),
+              GestureDetector(
+                child: Text(
+                  Strings.gitUrl, 
+                  style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue)),
+                onTap: () {
+                  launch(Strings.gitUrl);
+                }
+              )
+            ],
+            context: context,
           );
         }
       },
@@ -250,7 +263,14 @@ class _ContestsList extends State<ContestsList> {
 				if(value==3){
 					//Remind me!
 					await _localContestsHelper.switchAlertToContest(contest);
-          String message = contest.hasAlert == 0 ? "The contest would be notified" : "The contest notification has been canceled";
+          String message;
+          int timeDelay = prefsHelper.getInt(Strings.reminderTime, 60);
+          if(contest.hasAlert == 0){ 
+            message = "The contest would be notified ${timeDelay%60 > 0 ? timeDelay : 1} ${timeDelay%60 > 0 ? "minute" : "hour"}${timeDelay%60 > 1 ? "s" : ""} before the contest" ;
+          }
+          else{
+            message = "The contest notification has been canceled";
+          }
           showSnackBar(message);
           setState(() {
             contest.hasAlert = contest.hasAlert == 0 ? 1 : 0;
@@ -369,4 +389,3 @@ class _ContestsList extends State<ContestsList> {
 		return Colors.black;
 	}
 }
-

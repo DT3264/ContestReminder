@@ -1,11 +1,12 @@
 import 'package:contests_reminder/Models/contest.dart';
 import 'package:contests_reminder/Helpers/databaseHelper.dart';
 import 'package:contests_reminder/Helpers/shared_preferences_helper.dart';
+import 'package:contests_reminder/Utils/strings.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 	
 class LocalContestsHelper{
   DatabaseHelper _dbHelper = DatabaseHelper();
-  SharedPreferencesHelper _sharedPreferencesHelper = SharedPreferencesHelper();
+  SharedPreferencesHelper _prefsHelper = SharedPreferencesHelper();
   FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   Future insertContests(List<Contest> contestList) async{
@@ -21,11 +22,11 @@ class LocalContestsHelper{
       for(int i=0; i<contestList.length; i++){
         query = "update contests set ${contestList[i].toSqlUpdate()} where contestUrl = '${contestList[i].contestUrl}'";
         int res = await _dbHelper.rawUpdate(query);
-        print(query);
+        //print(query);
         if(res==0){
           query = "insert into contests values ${contestList[i].toSqlInsert()};";
           await _dbHelper.rawInsert(query);
-          print(query);
+          //print(query);
         }
       }
     }
@@ -40,7 +41,8 @@ class LocalContestsHelper{
     List<Map<String, dynamic>> rows = await _dbHelper.rawQuery(query);
     List<Contest> contestList = List<Contest>();
     Contest actualContest;
-    List<String> contestsIgnored = _sharedPreferencesHelper.getUnsubscribedContests();
+    await _prefsHelper.checkInit();
+    List<String> contestsIgnored = await _prefsHelper.getUnsubscribedContests();
     for(Map<String, dynamic> row in rows){
       actualContest = Contest(
         contestId: row["id"],
@@ -101,7 +103,17 @@ class LocalContestsHelper{
     }
   }
   Future<void> scheduleContestNotification(Contest contest) async{
-    var scheduledNotificationDateTime = contest.contestStart.subtract(Duration(hours: 1));
+    //Get time to delay before contest from Strings.reminderDelay or so
+    await _prefsHelper.checkInit();
+    int minutesDelay = _prefsHelper.getInt(Strings.reminderTime, 60);
+    Duration timeBeforeTest;
+    if(minutesDelay == 60){
+      timeBeforeTest = Duration(hours: 1);
+    }
+    else{
+      timeBeforeTest = Duration(minutes: minutesDelay);
+    }
+    var scheduledNotificationDateTime = contest.contestStart.subtract(timeBeforeTest);
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
       'contest_reminder', 
       'contest_reminder', 
