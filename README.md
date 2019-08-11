@@ -1,6 +1,13 @@
-# contests_reminder
+# Contests Reminder
 
-A client that shows upcoming contests on AtCoder and Codeforcs (will add more in the future)
+A flutter app that shows upcoming contests on AtCoder and Codeforces, can notify about upcoming contests 1 hour, 30,  15, 10, 5, 1 minute before they begin, and notifies when new contests are listed.
+Atm android only, could be iOS if enough requests are made.
 
-To-do:
-    -Implement some pattern like BLOC, scope_model or RxDart, take out the contestsList as a widget and make it reactive for use it on both the contestsList and the hiddenContests with https://github.com/appdev/FlutterRxBus or https://pub.dev/packages/event_bus 
+# Screenshots:
+<img src="https://i.imgur.com/gLkQzbn.png" alt="1st page" height="500">
+<img src="https://i.imgur.com/tTmGivu.png" alt="2nd page" height="500">
+<img src="https://i.imgur.com/4rM5sE9.png" alt="3rd page" height="500">
+
+
+# To-do:
+ * Implement some pattern like BLOC, scope_model or RxDart, take out the contestsList as a widget and make it reactive in order to use it on both contestsList and hiddenContests, also could be with https://github.com/appdev/FlutterRxBus or https://pub.dev/packages/event_bus 
