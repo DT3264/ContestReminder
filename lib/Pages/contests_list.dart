@@ -39,6 +39,7 @@ class _ContestsList extends State<ContestsList> {
 
   void init() async {
 		initFirebase();
+    initNotifications();
     checkFirstInit();
     refreshContests();
 	}
@@ -262,19 +263,7 @@ class _ContestsList extends State<ContestsList> {
 				}
 				if(value==3){
 					//Remind me!
-					await _localContestsHelper.switchAlertToContest(contest);
-          String message;
-          int timeDelay = prefsHelper.getInt(Strings.reminderTime, 60);
-          if(contest.hasAlert == 0){ 
-            message = "The contest would be notified ${timeDelay%60 > 0 ? timeDelay : 1} ${timeDelay%60 > 0 ? "minute" : "hour"}${timeDelay%60 > 1 ? "s" : ""} before the contest" ;
-          }
-          else{
-            message = "The contest notification has been canceled";
-          }
-          showSnackBar(message);
-          setState(() {
-            contest.hasAlert = contest.hasAlert == 0 ? 1 : 0;
-          });
+          await remindContest(contest);
 				}
 			},
 		);
@@ -370,9 +359,39 @@ class _ContestsList extends State<ContestsList> {
 		);
 	}
 
+  Future<void> remindContest(Contest contest) async{
+    int actualTime = DateTime.now().toUtc().millisecondsSinceEpoch~/1000;
+    int contestStart = contest.contestStart.millisecondsSinceEpoch~/1000;
+    int contestEnd = contest.contestEnd.millisecondsSinceEpoch~/1000;
+    if(actualTime >= contestEnd){
+      showSnackBar("The contest has already ended");
+      await refreshContests();
+    }
+    else if (actualTime >= contestStart){
+      showSnackBar("The contests is in progress");
+    }
+    else if(contestStart - actualTime <= 60){
+      showSnackBar("The contest would start in <1 minute");
+    }
+    await _localContestsHelper.switchAlertToContest(contest);
+    String message;
+    int timeDelay = prefsHelper.getInt(Strings.reminderTime, 60);
+    if(contest.hasAlert == 0){ 
+      message = "The contest would be notified ${timeDelay%60 > 0 ? timeDelay : 1} ${timeDelay%60 > 0 ? "minute" : "hour"}${timeDelay%60 > 1 ? "s" : ""} before the contest" ;
+    }
+    else{
+      message = "The contest notification has been canceled";
+    }
+    showSnackBar(message);
+    setState(() {
+      contest.hasAlert = contest.hasAlert == 0 ? 1 : 0;
+    });
+  }
+
 	void showSnackBar(String text){
 		final snackBar = SnackBar(
 			//backgroundColor: Colors.black,
+      duration: Duration(seconds: 4),
 			content: scaledText(text, 16)
 		);
 		// Find the Scaffold in the widget tree and use it to show a SnackBar.

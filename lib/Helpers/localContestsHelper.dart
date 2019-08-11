@@ -92,6 +92,7 @@ class LocalContestsHelper{
 
   Future<void> switchAlertToContest(Contest contest) async{
     int newVal = contest.hasAlert == 0 ? 1 : 0;
+    //print("Alert val: $newVal");
     String query = "Update contests set hasAlertRegistred = $newVal where id = ${contest.contestId}";
     await _dbHelper.rawUpdate(query);
     if(newVal==1){
@@ -106,17 +107,12 @@ class LocalContestsHelper{
     //Get time to delay before contest from Strings.reminderDelay or so
     await _prefsHelper.checkInit();
     int minutesDelay = _prefsHelper.getInt(Strings.reminderTime, 60);
-    Duration timeBeforeTest;
-    if(minutesDelay == 60){
-      timeBeforeTest = Duration(hours: 1);
-    }
-    else{
-      timeBeforeTest = Duration(minutes: minutesDelay);
-    }
+    String message = "${contest.contestName} would start in ${minutesDelay%60 > 0 ? minutesDelay : 1} ${minutesDelay%60 > 0 ? "minute" : "hour"}${minutesDelay%60 > 1 ? "s" : ""}." ;
+    Duration timeBeforeTest = Duration(seconds: minutesDelay*60);
     var scheduledNotificationDateTime = contest.contestStart.subtract(timeBeforeTest);
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
-      'contest_reminder', 
-      'contest_reminder', 
+      'Contest Reminder', 
+      'Contest Reminder', 
       'Chanel that notifies individual contests',
       style: AndroidNotificationStyle.BigText
     );
@@ -125,7 +121,7 @@ class LocalContestsHelper{
     await _localNotifications.schedule(
       contest.contestId,
       'Next contest',
-      'The contest ${contest.contestName} would start in an hour',
+      message,
       scheduledNotificationDateTime,
       platformChannelSpecifics,
       androidAllowWhileIdle: true
