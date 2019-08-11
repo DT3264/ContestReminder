@@ -1,1 +1,1 @@
-adb install -r C:\Users\Dani\Documents\Proyects\contest_reminder\build\app\outputs\apk\release\app-arm64-v8a-release.apk
+adb install -r C:\Users\Dani\Documents\Proyects\contest_reminder\build\app\outputs\apk\release\app-release.apk

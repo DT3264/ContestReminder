@@ -37,7 +37,7 @@ class LocalContestsHelper{
     int nowInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     query = "delete from contests where contestEnd <= $nowInSeconds";
     _dbHelper.rawDelete(query);
-    query = "select * from contests where hidden = 0";
+    query = "select * from contests where hidden = 0 order by contestStart";
     List<Map<String, dynamic>> rows = await _dbHelper.rawQuery(query);
     List<Contest> contestList = List<Contest>();
     Contest actualContest;
