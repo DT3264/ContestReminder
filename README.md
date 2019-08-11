@@ -1,6 +1,6 @@
 # Contests Reminder
 
-A flutter app that shows upcoming contests on AtCoder and Codeforces, can notify about upcoming contests 1 hour, 30,  15, 10, 5, 1 minute before they begin, and notifies when new contests are listed.
+A flutter app that shows upcoming contests on AtCoder and Codeforces, can notify about upcoming contests 1 hour, 30, 10, 15, 10, 5 minutes or 1 minute before they begin, and notifies when new contests are listed.
 Atm android only, could be iOS too if enough requests are made.
 
 # Screenshots:
