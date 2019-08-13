@@ -9,8 +9,7 @@
 .history
 .svn/
 to-do.txt
-installRelease.bat
-buildRelease.bat
+*.bat
 
 # IntelliJ related
 *.iml
