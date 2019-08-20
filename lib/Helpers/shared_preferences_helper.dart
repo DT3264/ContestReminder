@@ -64,7 +64,7 @@ class SharedPreferencesHelper{
   Future<void> subscribeToTopic(String topicToSubscribe) async{
     print("Subscribing to $topicToSubscribe");
     prefs.setBool(topicToSubscribe, true);
-    //await _fireCloudMessaging.subscribeToTopic(topicToSubscribe);
+    await _fireCloudMessaging.subscribeToTopic(topicToSubscribe);
   }
   Future<bool> isSubscibedToTopic(String topic) async{
     return getBool(topic, false);
