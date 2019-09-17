@@ -13,5 +13,4 @@ Atm android only, could be iOS too if enough requests are made.
 You can get the lastest release from [here](https://github.com/DT3264/ContestReminder/releases)
 
 # To-do:
- * Add firebase storage instead database (this as reference: https://fireship.io/lessons/flutter-push-notifications-fcm-guide/)
  * Implement some pattern like BLOC, scope_model or RxDart, take out the contestsList as a widget and make it reactive in order to use it on both contestsList and hiddenContests, also could be with https://github.com/appdev/FlutterRxBus or https://pub.dev/packages/event_bus 

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -38,13 +38,13 @@ class _ContestsList extends State<ContestsList> {
 	}
 
   void init() async {
-		initFirebase();
+		await initFirebase();
+    await checkFirstInit();
     initNotifications();
-    checkFirstInit();
     refreshContests();
 	}
 
-  void checkFirstInit() async{
+  Future<void> checkFirstInit() async{
     await prefsHelper.init();
     if(prefsHelper.isFirstStart()){
       print("first init");
@@ -147,7 +147,8 @@ class _ContestsList extends State<ContestsList> {
     );
   }
 
-	void initFirebase() {
+	Future<void> initFirebase() async{
+    await FirebaseAuth.instance.signInAnonymously();
 		_fireCloudMessaging.configure(
 			onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
@@ -222,14 +223,7 @@ class _ContestsList extends State<ContestsList> {
     setState(() {
       isLoadingData = true;
     });
-    try{
-      await _contestsFetcher.fetchContests();
-    } on SocketException{
-			showSnackBar("There's no internet connection. Try again later.");
-    }
-    on Exception catch(e){
-      print(e);
-    }
+    await _contestsFetcher.fetchContests();
     _contestList = await _localContestsHelper.getContests();
     setState(() { 
       isLoadingData = false;

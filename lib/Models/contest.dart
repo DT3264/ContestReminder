@@ -10,8 +10,7 @@ class Contest{
 
   Contest({this.contestName, this.contestStart, this.contestEnd, this.contestUrl, this.contestPlatform, this.contestId=0, this.hidden=0, this.hasAlert=0});
 
-  Contest.fromFetch(dynamic contestData){
-      //print(contestData);
+  Contest.fromFirestore(Map<String, dynamic> contestData){
       contestName=contestData["contestName"];
       contestStart=DateTime.fromMillisecondsSinceEpoch(contestData["contestStart"]*1000, isUtc: true);
       contestEnd=DateTime.fromMillisecondsSinceEpoch(contestData["contestEnd"]*1000, isUtc: true);

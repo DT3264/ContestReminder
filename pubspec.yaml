@@ -34,6 +34,8 @@ dependencies:
   firebase_core: ^0.4.0+8
   firebase_messaging: ^5.1.2
   firebase_analytics: ^4.0.2
+  firebase_auth: ^0.11.1+6
+  cloud_firestore: ^0.12.9+4
 
 
 dev_dependencies:
