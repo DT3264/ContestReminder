@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:contests_reminder/Helpers/local_contests_helper.dart';
 class Contest{
   String contestName;
   DateTime contestStart;
@@ -32,4 +34,26 @@ class Contest{
   String toString() {
     return "$contestId - $contestName - $contestStart - $contestEnd - $contestPlatform - $contestUrl - $hidden - $hasAlert";
   }
+  Future<List<Contest>> fetchContests({bool getHidden}) async{
+	  LocalContestsHelper localContestsHelper = LocalContestsHelper();
+    List<Contest> contestsList = List();
+    if(getHidden){
+      contestsList=await localContestsHelper.getHiddenContests();
+      return contestsList;
+    }
+    await Firestore.instance
+      .collection('contests').getDocuments()
+      .then((QuerySnapshot ds){
+        for(DocumentSnapshot contestSnapshot in ds.documents){
+          contestsList.add(Contest.fromFirestore(contestSnapshot.data));
+        }
+      });
+		await localContestsHelper.insertContests(contestsList);
+    if(getHidden){
+      return localContestsHelper.getHiddenContests();
+    }
+    else{
+      return localContestsHelper.getContests();
+    }
+	}
 }

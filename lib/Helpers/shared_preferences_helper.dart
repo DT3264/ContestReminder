@@ -27,6 +27,10 @@ class SharedPreferencesHelper{
     }
   }
 
+  void setBool(String key, bool value){
+    prefs.setBool(key, value);
+  }
+
   bool isFirstStart(){
     if(getBool(Strings.isFirstStart, true)){
       prefs.setBool(Strings.isFirstStart, false);

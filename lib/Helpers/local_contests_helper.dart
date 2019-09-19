@@ -1,5 +1,5 @@
 import 'package:contests_reminder/Models/contest.dart';
-import 'package:contests_reminder/Helpers/databaseHelper.dart';
+import 'package:contests_reminder/Helpers/database_helper.dart';
 import 'package:contests_reminder/Helpers/shared_preferences_helper.dart';
 import 'package:contests_reminder/Utils/strings.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
