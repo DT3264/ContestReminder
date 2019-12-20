@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:contests_reminder/Widgets/contests_list.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,7 +35,6 @@ class _MainPage extends State<MainPage> {
 	}
   
   Future<void> initFirebase() async{
-    await FirebaseAuth.instance.signInAnonymously();
 		_fireCloudMessaging.configure(
 			onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
@@ -86,7 +84,6 @@ class _MainPage extends State<MainPage> {
 	@override
 	Widget build(BuildContext context) {
 		return Scaffold(
-		//key: _scaffoldKey,
 		appBar: AppBar(
 			title: Text("Contest Reminder"),
       actions: [ PopupMenuButton(

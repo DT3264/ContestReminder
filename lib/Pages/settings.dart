@@ -1,9 +1,11 @@
+import 'package:contests_reminder/Utils/themes.dart' as themes;
 import 'package:flutter/material.dart';
 import 'package:functional_widget_annotation/functional_widget_annotation.dart';
 
 import 'package:contests_reminder/Utils/strings.dart';
 import 'package:contests_reminder/Widgets/scaled_text.dart';
 import 'package:contests_reminder/Helpers/shared_preferences_helper.dart';
+import 'package:provider/provider.dart';
 
 class Settings extends StatefulWidget{
   @override
@@ -29,7 +31,6 @@ class _Settings extends State<Settings>{
     List<bool> tmpSubscriptionsList = List<bool>();
     tmpSubscriptionsList.add(_prefsHelper.getBool(Strings.atcoderTopic, false));
     tmpSubscriptionsList.add(_prefsHelper.getBool(Strings.codeforcesTopic, false));
-    tmpSubscriptionsList.add(_prefsHelper.getBool(Strings.debugTopic, false));
     setState(() {
       _subscriptionsList = tmpSubscriptionsList;
       this._reminderMinutes=reminderMinutes;
@@ -39,6 +40,7 @@ class _Settings extends State<Settings>{
 
   @override
   Widget build(BuildContext context){
+    final themeNotifier = Provider.of<themes.ThemeNotifier>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Settings"),
@@ -96,7 +98,8 @@ class _Settings extends State<Settings>{
                   ],
                 ),
               ),
-              Padding(
+              //Dark mode enabler, when ensureInitialized works again
+                Padding(
                 padding: EdgeInsets.all(5),
                 child: Row(
                   children: <Widget>[
@@ -105,16 +108,16 @@ class _Settings extends State<Settings>{
                       activeColor: Theme.of(context).backgroundColor,
                       value: _usingDark,
                       onChanged: (bool toDark) {
+                        if(toDark){
+                          themeNotifier.setTheme(themes.darkTheme);
+                         }
+                         else{
+                           themeNotifier.setTheme(themes.lightTheme);
+                         }
                         setState(() {
                           _usingDark=toDark;
                         });
                         _prefsHelper.setBool(Strings.usingDark, toDark);
-                        Scaffold.of(context).showSnackBar(
-                          SnackBar(
-                            duration: Duration(seconds: 4),
-                            content: ScaledText(text: "Restart the app to see the changes", fontSize: 16),
-                          )
-                        );
                       }
                     ),
                     ScaledText(text: "Enable dark theme", fontSize:18)

@@ -59,8 +59,6 @@ class SharedPreferencesHelper{
   void subscribeToAllContests(){
     subscribeToTopic(Strings.atcoderTopic);
     subscribeToTopic(Strings.codeforcesTopic);
-    
-    subscribeToTopic(Strings.debugTopic);
   }
   Future<void> unsubscribeToTopic(String topicToUnsubscribe) async{
     print("Unsibscribing from $topicToUnsubscribe");

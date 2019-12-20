@@ -1,3 +1,4 @@
+import 'package:contests_reminder/Helpers/contest_fetcher.dart';
 import 'package:flutter/Material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:functional_widget_annotation/functional_widget_annotation.dart';
@@ -253,10 +254,10 @@ class _ContestsList extends State<ContestsList>{
       isLoadingData = true;
     });
     if(showHidden){
-      _contestList = await Contest().fetchContests(getHidden: true);
+      _contestList = await ContestsFetcher().fetchContests(getHidden: true);
     }
     else{
-      _contestList = await Contest().fetchContests(getHidden: false);
+      _contestList = await ContestsFetcher().fetchContests(getHidden: false);
     }
     setState(() { 
       isLoadingData = false;
