@@ -111,8 +111,8 @@ class LocalContestsHelper{
     Duration timeBeforeTest = Duration(seconds: minutesDelay*60);
     var scheduledNotificationDateTime = contest.contestStart.subtract(timeBeforeTest);
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
-      'Contest Reminder', 
-      'Contest Reminder', 
+      'Contests Reminder', 
+      'Contests Reminder', 
       'Chanel that notifies individual contests',
       style: AndroidNotificationStyle.BigText
     );

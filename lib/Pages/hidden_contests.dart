@@ -18,7 +18,7 @@ class _HiddenContests extends State<HiddenContests>{
       appBar: AppBar(
         title: Text("Hidden contests"),
       ),
-      body: ContestsList(showHidden: true,)
+      body: ContestsList(context: context, showHidden: true,)
     );
   }
 }

@@ -31,6 +31,8 @@ to-do.txt
 .pub/
 /build/
 
+.vscode/
+
 # Firecloud key
 **/android/app/google-services.json
 

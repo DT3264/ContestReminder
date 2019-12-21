@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:contests_reminder/Helpers/local_contests_helper.dart';
 import '../Models/contest.dart';
+import '../Widgets/scaled_text.dart';
 
 class ContestsFetcher {
   Future<http.Response> _requestContests() async {
@@ -28,7 +30,8 @@ class ContestsFetcher {
     return contestList;
   }
 
-  Future<List<Contest>> fetchContests({bool getHidden}) async {
+  Future<List<Contest>> fetchContests(
+      {bool getHidden, BuildContext context}) async {
     LocalContestsHelper localContestsHelper = LocalContestsHelper();
     List<Contest> contestsList = List();
     http.Response response;
@@ -37,8 +40,17 @@ class ContestsFetcher {
     }
     try {
       response = await _requestContests();
+    } on SocketException catch (e) {
+      showSnackBar('Internet not available', context);
+      print(e);
     } on Exception catch (e) {
-      print("Excepiton on fetchContests");
+      Scaffold.of(context).showSnackBar(SnackBar(
+        backgroundColor: Theme.of(context).backgroundColor,
+        content: ScaledText(
+          text: e.toString(),
+          fontSize: 16,
+        ),
+      ));
       throw (e);
     }
     List<Contest> contestList = [];
@@ -56,5 +68,21 @@ class ContestsFetcher {
 
     await localContestsHelper.insertContests(contestsList);
     return await localContestsHelper.getContests();
+  }
+
+  void showSnackBar(String message, BuildContext context) {
+    final snackbar = SnackBar(
+        backgroundColor: Theme.of(context).backgroundColor,
+        duration: Duration(seconds: 4),
+        content: Text(
+          message,
+          style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.black
+                  : Colors.white),
+        ));
+    // Find the Scaffold in the widget tree and use it to show a SnackBar.
+    Scaffold.of(context).showSnackBar(snackbar);
   }
 }
