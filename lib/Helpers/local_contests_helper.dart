@@ -20,13 +20,20 @@ class LocalContestsHelper{
     }
     if(contestList.length>0){
       for(int i=0; i<contestList.length; i++){
-        query = "update contests set ${contestList[i].toSqlUpdate()} where contestUrl = '${contestList[i].contestUrl}'";
+        Contest contest = contestList[i];
+        query = "update contests set ${contest.toSqlUpdate()} where contestUrl = '${contest.contestUrl}'";
         int res = await _dbHelper.rawUpdate(query);
         //print(query);
         if(res==0){
-          query = "insert into contests values ${contestList[i].toSqlInsert()};";
+          query = "insert into contests values ${contest.toSqlInsert()};";
           await _dbHelper.rawInsert(query);
           //print(query);
+        }
+        else{
+          if(contest.hasAlert==1){
+            cancelContestNotification(contest);
+            scheduleContestNotification(contest);
+          }
         }
       }
     }
