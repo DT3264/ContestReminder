@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:contests_reminder/Helpers/contest_fetcher.dart';
 import 'package:flutter/Material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -151,7 +153,7 @@ class _ContestsList extends State<ContestsList> {
           child: Column(children: <Widget>[
             ScaledText(
                 text: "${contest.contestPlatform} contest", fontSize: 18),
-            ScaledText(text: contest.contestName, fontSize: 18),
+            ScaledText(text: utf8.decode(contest.contestName.runes.toList()), fontSize: 18),
             Row(
               children: <Widget>[
                 dateTimeContestDesc(
